@@ -1,0 +1,362 @@
+# setup.01 ----
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# Global set up
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# Set your working directory
+setwd("C:/Users/Julian/Desktop/Statistik/R/Data")
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# Load libraries
+#install.packages("forecast")
+#install.packages("vars") 
+#install.packages("frequencyConnectedness")
+#install.packages("xtable")
+#install.packages("lmtest")
+#library("forecast")
+#library("vars")
+#library(xtable)
+#options(xtable.floating = FALSE)
+#options(xtable.timestamp = "")
+#library("lmtest")
+# task.1) ----
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# Load the data: diebold yilmaz.txt
+diebold_yilmaz.txt <- read.table("/Users/MariusPuke/Dropbox/Uni/Master/Semester_2/TIme_Series_Econometrics/Graded_Assignment/diebold_yilmaz.txt")
+diebold_yilmaz.txt
+#summary(diebold_yilmaz.txt)
+
+# task.1b) ----
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+VAR2.est <- VAR(diebold_yilmaz.txt,p=2,type=c("const"),season=NULL,exogen=NULL,lag.max=NULL)
+VAR2.est
+summary(VAR2.est)
+
+roots(VAR2.est, modulus = TRUE) 
+# Any VAR(p)-process can be written in a first-order vector autoregressive form: the companion form. . A VAR(p)-process is stable, if all eigenvalues of the companion matrix have modulus less than 1. We get 38 values, two for every estimation. 
+roots(VAR2.est, modulus = FALSE) 
+
+
+# task.1c+d) ----
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# Forecasting Error Variance Decomposition (FEVD) 
+VAR2.est.fevd <- fevd(VAR2.est,n.ahead=10)
+VAR2.est.fevd #row sum always 1 , last row of each col goes into tab 3 ,  multiplied by 100 and rounded to digit
+
+tab_3_US  <- VAR2.est.fevd$US[10,] 
+tab_3_US
+tab_3_UK  <- VAR2.est.fevd$UK[10,]
+tab_3_UK
+tab_3_FRA <- VAR2.est.fevd$France[10,]
+tab_3_FRA
+tab_3_GER <- VAR2.est.fevd$Germany[10,]
+tab_3_GER
+tab_3_HKG <- VAR2.est.fevd$Hong.Kong[10,] 
+tab_3_HKG
+tab_3_JPN <- VAR2.est.fevd$Japan[10,]
+tab_3_JPN
+tab_3_AUS <- VAR2.est.fevd$Australia[10,]
+tab_3_AUS
+tab_3_IDN <- VAR2.est.fevd$Indonesia[10,] 
+tab_3_IDN
+tab_3_KOR <- VAR2.est.fevd$S..Korea[10,]
+tab_3_KOR
+tab_3_MYS <- VAR2.est.fevd$Malaysia[10,]
+tab_3_MYS
+tab_3_PHL <- VAR2.est.fevd$Philippines[10,] 
+tab_3_PHL
+tab_3_SGP <- VAR2.est.fevd$Singapore[10,]
+tab_3_SGP
+tab_3_TAI <- VAR2.est.fevd$Taiwan[10,]
+tab_3_TAI
+tab_3_THA <- VAR2.est.fevd$Thailand[10,] 
+tab_3_THA
+tab_3_ARG <- VAR2.est.fevd$Argentina[10,] 
+tab_3_ARG 
+tab_3_BRA <- VAR2.est.fevd$Brazil[10,] 
+tab_3_BRA
+tab_3_CHL <- VAR2.est.fevd$Chile[10,]
+tab_3_CHL
+tab_3_MEX <- VAR2.est.fevd$Mexico[10,]
+tab_3_MEX
+tab_3_TUR <- VAR2.est.fevd$Turkey[10,]
+tab_3_TUR
+
+
+table3_spillover = matrix(c(tab_3_US,tab_3_UK,tab_3_FRA,tab_3_GER,tab_3_HKG,tab_3_JPN,tab_3_AUS,tab_3_IDN,tab_3_KOR,tab_3_MYS,tab_3_PHL,tab_3_SGP,tab_3_TAI,tab_3_THA,tab_3_ARG,tab_3_BRA,tab_3_CHL,tab_3_MEX,tab_3_TUR), nrow=19, ncol=19,byrow = TRUE)        
+table3_spillover
+dimnames(table3_spillover) = list(c("US", "UK", "FRA","GER","HKG","JPN","AUS","IDN","KOR","MYS","PHL","SGP","TAI","THA","ARG","BRA","CHL","MEX","TUR"), c("US", "UK", "FRA","GER","HKG","JPN","AUS","IDN","KOR","MYS","PHL","SGP","TAI","THA","ARG","BRA","CHL","MEX","TUR"))  
+table3_spillover_rounded <- round(table3_spillover*100, digits = 1)
+table3_spillover_rounded
+
+
+contribution_including_own <- colSums(table3_spillover)*100
+contribution_including_own
+contribution_including_own_rounded <- round(contribution_including_own, digits = 0)
+contribution_including_own_rounded
+
+contribution_to_others <- matrix( data=NA, nrow = 1, ncol = 19)
+for (i in contribution_to_others){
+  contribution_to_others = round(contribution_including_own - diag(table3_spillover)*100, digits = 0)  
+}
+contribution_to_others
+
+rowsum_tab3 <- rowSums(table3_spillover)
+contribution_from_others <- matrix( data=NA, nrow = 19, ncol = 1)
+for (i in contribution_from_others){
+  contribution_from_others = round(rowsum_tab3*100 - diag(table3_spillover)*100, digits = 0)  
+}
+contribution_from_others
+
+fin_table3_spillover = matrix(c(table3_spillover_rounded,contribution_from_others), nrow=19, ncol=20,byrow = FALSE)  
+fin_table3_spillover
+dimnames(fin_table3_spillover) = list(c("US", "UK", "FRA","GER","HKG","JPN","AUS","IDN","KOR","MYS","PHL","SGP","TAI","THA","ARG","BRA","CHL","MEX","TUR"), c("US", "UK", "FRA","GER","HKG","JPN","AUS","IDN","KOR","MYS","PHL","SGP","TAI","THA","ARG","BRA","CHL","MEX","TUR","CFO"))  
+fin_table3_spillover
+contribution_to_others
+contribution_including_own_rounded
+
+#Generate Latex Table to compare results
+#fin_table3_spillover.table <- xtable(fin_table3_spillover, digits = 1)
+#print(fin_table3_spillover.table)
+#contribution_to_others.table <- data.frame(contribution_to_others)
+#contribution_from_others.table <- data.frame(contribution_from_others)
+#print(xtable(contribution_to_others.table, digits = 0))
+#print(xtable(contribution_from_others.table, digits = 0))
+
+# task.1e) ----
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+#Spillover effect among US bond market, stock market, oil market, commodity market and FX market
+
+# Load the data
+ourdata=read.table("/Users/MariusPuke/Dropbox/Uni/Master/Semester_2/TIme_Series_Econometrics/Graded_Assignment/NEW.txt")
+summary(ourdata)
+
+VAR2_1e.est <- VAR(ourdata,p=2,type=c("const"),season=NULL,exogen=NULL,lag.max=NULL)
+VAR2_1e.est
+summary(VAR2_1e.est)
+
+roots(VAR2_1e.est, modulus = TRUE) 
+# Any VAR(p)-process can be written in a first-order vector autoregressive form: the companion form. . A VAR(p)-process is stable, if all eigenvalues of the companion matrix have modulus less than 1. We get 38 values, two for every estimation. 
+roots(VAR2_1e.est, modulus = FALSE) 
+
+
+# Forecasting Error Variance Decomposition (FEVD) 
+VAR2_1e.est.fevd <- fevd(VAR2_1e.est,n.ahead=10)
+VAR2_1e.est.fevd #row sum always 1 , last row of each col goes into tab 3 ,  multiplied by 100 and rounded to digit
+
+
+tab_3_X2_Y_B_Y  <- VAR2_1e.est.fevd$X2_Y_B_Y[10,] 
+tab_3_X2_Y_B_Y
+tab_3_S.P500  <- VAR2_1e.est.fevd$S.P500[10,]
+tab_3_S.P500
+tab_3_WTI <- VAR2_1e.est.fevd$WTI[10,]
+tab_3_WTI
+tab_3_Gold <- VAR2_1e.est.fevd$Gold[10,]
+tab_3_Gold
+tab_3_Euro_Dollar_FX <- VAR2_1e.est.fevd$Euro_Dollar_FX[10,]
+tab_3_Euro_Dollar_FX
+
+
+
+table_spillover_1e = matrix(c(tab_3_X2_Y_B_Y, tab_3_S.P500, tab_3_WTI, tab_3_Gold, tab_3_Euro_Dollar_FX), nrow=5, ncol=5,byrow = TRUE)        
+table_spillover_1e
+dimnames(table_spillover_1e) = list(c("2_Y_B_Y", "S&P500", "WTI",  "Gold", "Euro_Dollar_FX"))  
+table_spillover_rounded_1e <- round(table_spillover_1e*100, digits = 1)
+table_spillover_rounded_1e
+
+
+contribution_including_own_1e <- colSums(table_spillover_1e)*100
+contribution_including_own_1e
+contribution_including_own_rounded_1e <- round(contribution_including_own_1e, digits = 0)
+contribution_including_own_rounded_1e
+
+contribution_to_others_1e <- matrix( data=NA, nrow = 1, ncol = 5)
+for (i in contribution_to_others_1e){
+  contribution_to_others_1e = round(contribution_including_own_1e - diag(table_spillover_1e)*100, digits = 0)  
+}
+contribution_to_others_1e
+
+rowsum_tab_1e <- rowSums(table_spillover_1e)
+contribution_from_others_1e <- matrix( data=NA, nrow = 5, ncol = 1)
+for (i in contribution_from_others_1e){
+  contribution_from_others_1e = round(rowsum_tab_1e*100 - diag(table_spillover_1e)*100, digits = 0)  
+}
+contribution_from_others_1e
+
+fin_table_spillover_1e = matrix(c(table_spillover_rounded_1e,contribution_from_others_1e), nrow=5, ncol=6,byrow = FALSE)  
+fin_table_spillover_1e
+dimnames(fin_table_spillover_1e) = list(c("2_Y_B_Y", "S&P500", "WTI",  "Gold", "Euro_Dollar_FX"))
+fin_table_spillover_1e
+contribution_to_others_1e
+contribution_including_own_rounded_1e
+
+
+
+
+# task.2) ----
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# Load the data: 
+germanmacro.txt <- read.table("/Users/MariusPuke/Dropbox/Uni/Master/Semester_2/TIme_Series_Econometrics/Graded_Assignment/germanmacro.txt")
+germanmacro.txt
+summary(germanmacro.txt)
+
+# Define variables
+BIP  <- log(germanmacro.txt[,1])     
+GLS <- germanmacro.txt[,2]
+M1 <- log(germanmacro.txt[,3])
+Date <- germanmacro.txt[,4]
+
+
+# task.2a) ----
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+delta_4_bip <- diff(BIP, lag = 1, differences = 4)
+delta_4_mlr <- diff(M1, lag=1, differences = 4)
+delta_4_bip
+delta_4_mlr
+
+GLS <- GLS[5:120] # we loose the first 4 obs due to taking the 4th difference. Also drop the first obs of GLS to make the data fit into one matrix. 
+GLS
+data <- cbind(delta_4_bip,delta_4_mlr, GLS)
+data
+
+
+# task.2b) ----
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+VAR2_2b.est <- VAR(data,p=2,type=c("const"),season=NULL,exogen=NULL,lag.max=NULL)
+
+VAR2_2b.est
+summary(VAR2_2b.est)
+VAR2_2b.est$varresult
+vcov(VAR2_2b.est)
+resid(VAR2_2b.est)
+
+# task.2c) ----
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# multivariat tests
+causality(VAR2_2b.est, cause = "delta_4_bip")
+causality(VAR2_2b.est, cause = "delta_4_mlr")
+causality(VAR2_2b.est, cause = "GLS")
+
+
+
+# task.2d) ----
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+#implement the new order into a matrix
+ordered_data <- cbind(delta_4_mlr,GLS,delta_4_bip)
+ordered_data
+
+VAR2_2d.est <- VAR(ordered_data,p=2,type=c("const"),season=NULL,exogen=NULL,lag.max=NULL)
+
+
+VAR2_2d.est
+summary(VAR2_2d.est)
+
+VAR2_2d.est.irf <- irf(VAR2_2d.est, ortho = TRUE , boot = TRUE)
+VAR2_2d.est.irf
+
+
+#irf for h =1 
+
+irf1_1 <- head(VAR2_2d.est.irf$irf$delta_4_mlr)[1,]
+irf1_2 <- head(VAR2_2d.est.irf$irf$GLS)[1,]
+irf1_3 <- head(VAR2_2d.est.irf$irf$delta_4_bip)[1,]
+
+
+IRF_1 <- matrix(c(irf1_1,irf1_2,irf1_3),nrow = 3 , ncol = 3 , byrow = FALSE)  
+IRF_1
+
+
+#irf for h =2 
+
+irf2_1 <- head(VAR2_2d.est.irf$irf$delta_4_mlr)[2,]
+irf2_2 <- head(VAR2_2d.est.irf$irf$GLS)[2,]
+irf2_3 <- head(VAR2_2d.est.irf$irf$delta_4_bip)[2,]
+
+IRF_2 <- matrix(c(irf2_1,irf2_2,irf2_3),nrow = 3 , ncol = 3 , byrow = FALSE)  
+IRF_2
+
+
+#irf for h =3 
+
+irf3_1 <- head(VAR2_2d.est.irf$irf$delta_4_mlr)[3,]
+irf3_2 <- head(VAR2_2d.est.irf$irf$GLS)[3,]
+irf3_3 <- head(VAR2_2d.est.irf$irf$delta_4_bip)[3,]
+
+IRF_3 <- matrix(c(irf3_1,irf3_2,irf3_3),nrow = 3 , ncol = 3 , byrow = FALSE)  
+IRF_3
+
+
+
+#Generate Latex Table to compare results
+IRF_1.table <- xtable(IRF_1, digits = 2)
+print(IRF_1.table)
+IRF_2.table <- xtable(IRF_2, digits = 2)
+print(IRF_2.table)
+IRF_3.table <- xtable(IRF_3, digits = 2)
+print(IRF_3.table)
+
+
+
+
+
+
+
+# task.2e) ----
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+VAR2_2d.est.fevd <- fevd(VAR2_2d.est,n.ahead=10)
+VAR2_2d.est.fevd
+
+# calc one step ahead variance dacompostion by hand:
+aa <- (head(IRF_1)[1,1])^2/((head(IRF_1)[1,1])^2)
+ab <- (head(IRF_1)[1,2])^2/((head(IRF_1)[1,1])^2)
+ac <- (head(IRF_1)[1,3])^2/((head(IRF_1)[1,1])^2)
+
+
+ba <- (head(IRF_1)[2,1])^2/((head(IRF_1)[2,1])^2+(head(IRF_1)[2,2])^2)
+bb <- (head(IRF_1)[2,2])^2/((head(IRF_1)[2,1])^2+(head(IRF_1)[2,2])^2)
+bc <- (head(IRF_1)[2,3])^2/((head(IRF_1)[2,1])^2+(head(IRF_1)[2,2])^2)
+
+ca <- (head(IRF_1)[3,1])^2/((head(IRF_1)[3,1])^2+(head(IRF_1)[3,2])^2+(head(IRF_1)[3,3])^2)
+cb <- (head(IRF_1)[3,2])^2/((head(IRF_1)[3,1])^2+(head(IRF_1)[3,2])^2+(head(IRF_1)[3,3])^2)
+cc <- (head(IRF_1)[3,3])^2/((head(IRF_1)[3,1])^2+(head(IRF_1)[3,2])^2+(head(IRF_1)[3,3])^2)
+
+var_dec_1st_by_hand <- matrix(c(aa,ab,ac,ba,bb,bc,ca,cb,cc),nrow = 3 , ncol = 3 , byrow = TRUE)  
+var_dec_1st_by_hand
+
+# calc one step ahead variance dacompostion by automatically:
+
+VAR2_2d.est.fevd.delta_4_bip_1step <-VAR2_2d.est.fevd$delta_4_bip[1,] 
+VAR2_2d.est.fevd.delta_4_bip_1step
+
+VAR2_2d.est.fevd.delta_4_mlr_1step <-VAR2_2d.est.fevd$delta_4_mlr[1,] 
+VAR2_2d.est.fevd.delta_4_mlr_1step
+
+VAR2_2d.est.fevd.GLS_1step <-VAR2_2d.est.fevd$GLS[1,] 
+VAR2_2d.est.fevd.GLS_1step
+
+var_dec_1step <- matrix(c(VAR2_2d.est.fevd.delta_4_mlr,VAR2_2d.est.fevd.GLS,VAR2_2d.est.fevd.delta_4_bip),nrow = 3, ncol = 3, byrow = TRUE)
+
+# compare results 
+var_dec_1step
+var_dec_1st_by_hand
+
+var_dec_1step <- xtable(var_dec_1step, digits = 4)
+print(var_dec_1step)
+
+
+# var dec 10-step ahead
+
+VAR2_2d.est.fevd.delta_4_bip <-VAR2_2d.est.fevd$delta_4_bip[10,] 
+VAR2_2d.est.fevd.delta_4_bip
+
+VAR2_2d.est.fevd.delta_4_mlr <-VAR2_2d.est.fevd$delta_4_mlr[10,] 
+VAR2_2d.est.fevd.delta_4_mlr
+
+VAR2_2d.est.fevd.GLS <-VAR2_2d.est.fevd$GLS[10,] 
+VAR2_2d.est.fevd.GLS
+
+var_dec <- matrix(c(VAR2_2d.est.fevd.delta_4_mlr,VAR2_2d.est.fevd.GLS,VAR2_2d.est.fevd.delta_4_bip),nrow = 3, ncol = 3, byrow = TRUE)
+var_dec
+var_dec <- xtable(var_dec, digits = 4)
+print(var_dec)
+
+
